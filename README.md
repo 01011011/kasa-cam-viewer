@@ -42,5 +42,5 @@ Kasa Cam Viewer is a lightweight application designed to stream video from the *
 
 4. Run the application:
    ```bash
-    python stream_reader.py
+    python app.py
 
