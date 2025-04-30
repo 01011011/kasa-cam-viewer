@@ -37,15 +37,10 @@ Kasa Cam Viewer is a lightweight application designed to stream video from the *
     RECORDING_DIR=recordings/
 
 3. Install dependencies
-
-pip install -r requirements.txt
+   ```bash
+    pip install -r requirements.txt
 
 4. Run the application:
+   ```bash
+    python stream_reader.py
 
-python stream_reader.py
-
-Notes
-Ensure the .env file is configured with the necessary credentials for your camera.
-Recordings are saved in the recordings/ folder by default.
-License
-This project is licensed under the MIT License.
