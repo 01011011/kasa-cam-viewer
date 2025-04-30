@@ -21,19 +21,20 @@ Kasa Cam Viewer is a lightweight application designed to stream video from the *
 
 2. Create a .env file in the root directory with the following format:
 
-# .env file for Kasa Cam Viewer
+   ```bash
+    # .env file for Kasa Cam Viewer
 
-# Kasa Camera IP Address
-CAMERA_IP=192.168.1.100
+    # Kasa Camera IP Address
+    CAMERA_IP=192.168.1.100
 
-# Kasa Camera Username
-CAMERA_USERNAME=your_username
+    # Kasa Camera Username
+    CAMERA_USERNAME=your_username
 
-# Kasa Camera Password
-CAMERA_PASSWORD=your_password
+    # Kasa Camera Password
+    CAMERA_PASSWORD=your_password
 
-# Recording Directory (default: recordings/)
-RECORDING_DIR=recordings/
+    # Recording Directory (default: recordings/)
+    RECORDING_DIR=recordings/
 
 3. Install dependencies
 
