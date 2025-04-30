@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kasa cams</title>
+<style>
+    body       { background:#111; color:#eee; font-family:system-ui,Arial,Helvetica,sans-serif; margin:0 }
+    h1         { text-align:center; padding:18px 0; margin:0 }
+    .grid      { display:flex; justify-content:center; gap:20px; flex-wrap:wrap }
+    .cam       { border:2px solid #444; background:#000; }
+    img        { display:block; max-width:100%; height:auto }
+</style>
+</head>
+<body>
+  <h1>Kasa Live Feeds</h1>
+  <div class="grid">
+    {% for cam in cameras %}
+      <div class="cam">
+        <img src="{{ url_for('video', cam=cam) }}" alt="{{ cam }}">
+      </div>
+    {% endfor %}
+  </div>
+</body>
+</html>
