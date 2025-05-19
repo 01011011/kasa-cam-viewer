@@ -2,8 +2,9 @@ import os, time
 from flask import Flask, Response, render_template
 from dotenv import load_dotenv
 from stream_reader import StreamReader
-
-load_dotenv()
+from pathlib import Path
+dotenv_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path, override=True)
 
 app = Flask(__name__)
 

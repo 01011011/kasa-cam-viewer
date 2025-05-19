@@ -4,3 +4,4 @@
 
 # Ignore recordings folder
 recordings/
+venv/

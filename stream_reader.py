@@ -1,8 +1,8 @@
 """
-StreamReader
-============
-■ curl --raw                → ffmpeg → MJPEG  → browser
-■ curl --raw (second pipe)  → ffmpeg → x264 segments → disk
+StreamReader – v2 (quality via .env)
+====================================
+• curl --raw  →  ffmpeg → MJPEG (preview) → browser queue
+• curl --raw  →  ffmpeg → x264 rotating segments → disk
 
 Only WRAP_FILES MP4s are kept (default 2).
 """
@@ -21,20 +21,25 @@ class StreamReader:
                  fps=10, width=640,
                  seg_secs=10, record_dir="recordings"):
 
-        # ─── preview parameters ────────────────────────────────────────────
-        self.name  = name
-        self.url   = f"https://{ip}:19443/https/stream/mixed?video=h264"
-        self.auth  = f"{user}:{pwd}"
-        self.fps   = int(os.getenv("FPS",   fps))
-        self.width = int(os.getenv("WIDTH", width))
+        # ——— preview parameters (env can override defaults) ———
+        self.name   = name
+        self.url    = f"https://{ip}:19443/https/stream/mixed?video=h264"
+        self.auth   = f"{user}:{pwd}"
 
-        # ─── recording / retention ────────────────────────────────────────
+        self.fps    = int(os.getenv("FPS", fps))
+        self.width  = int(os.getenv("WIDTH", width))  # 0 = no scaling
+        self.mjpg_q = int(os.getenv("MJPEG_Q", 4))    # JPEG quality
+
+        # ——— recording / retention ————————————————
         self.seg_secs = int(os.getenv("SEG_SECS", seg_secs))
         self.wrap     = int(os.getenv("WRAP_FILES", 2))
         self.rec_dir  = Path(os.getenv("RECORD_DIR", record_dir))
         self.rec_dir.mkdir(exist_ok=True, parents=True)
 
-        # —— frame queue for MJPEG —— (max ≈ 6 s @ 10 fps) ————————
+        self.crf     = os.getenv("CRF", "28")
+        self.preset  = os.getenv("PRESET", "veryfast")
+
+        # ——— frame queue for MJPEG (≈ 6 s max @ 10 fps) ———
         self.q = queue.Queue(maxsize=60)
 
     # ======================================================================
@@ -48,22 +53,26 @@ class StreamReader:
 
         out_pat = self.rec_dir / f"{self.name}_%02d.mp4"
 
+        scale_filter = f",scale={self.width}:-1" if self.width else ""
         ff_cmd = [
             FFMPEG, "-loglevel", "error",
             "-f", "h264", "-i", "pipe:0",
 
-            # ─── split to MJPEG + recorder ───────────────────────────────
+            # ——— split: preview branch & recording branch ———
             "-filter_complex",
             (f"[0:v]split=2[pv][pr];"
-             f"[pv]fps={self.fps},scale={self.width}:-1,"
+             f"[pv]fps={self.fps}{scale_filter},"
              f"format=yuvj422p[mjpeg]"),
 
-            # —— branch 1 : preview to stdout ————————————————
-            "-map", "[mjpeg]", "-c:v", "mjpeg", "-q:v", "4",
+            # —— branch 1 – MJPEG to stdout ————————————
+            "-map", "[mjpeg]", "-c:v", "mjpeg",
+                   "-q:v", str(self.mjpg_q),
             "-f",  "mjpeg",  "pipe:1",
 
-            # —— branch 2 : x264 segments to disk ——————————————
-            "-map", "[pr]", "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
+            # —— branch 2 – x264 segments to disk —————————
+            "-map", "[pr]", "-c:v", "libx264",
+                   "-preset", self.preset,
+                   "-crf",    self.crf,
             "-movflags", "+faststart",
             "-f",  "segment",
             "-segment_time",   str(self.seg_secs),
@@ -88,13 +97,14 @@ class StreamReader:
     # ---------------------------------------------------------------------
     def _extract_jpeg(self, stdout):
         buf = b""
+        SOI, EOI = b"\xff\xd8", b"\xff\xd9"   # start/end JPEG markers
         while True:
             chunk = stdout.read(8192)
             if not chunk:
                 break
             buf += chunk
             while True:
-                s = buf.find(b"\xff\xd8"); e = buf.find(b"\xff\xd9")
+                s = buf.find(SOI); e = buf.find(EOI)
                 if s != -1 and e != -1 and e > s:
                     if not self.q.full():
                         self.q.put(buf[s:e+2])

@@ -3,22 +3,57 @@
 <head>
 <meta charset="utf-8">
 <title>Kasa cams</title>
+
 <style>
-    body       { background:#111; color:#eee; font-family:system-ui,Arial,Helvetica,sans-serif; margin:0 }
-    h1         { text-align:center; padding:18px 0; margin:0 }
-    .grid      { display:flex; justify-content:center; gap:20px; flex-wrap:wrap }
-    .cam       { border:2px solid #444; background:#000; }
-    img        { display:block; max-width:100%; height:auto }
+/* —— page —— */
+body    { margin:0; background:#111; color:#eee;
+          font:16px/1.4 system-ui,Arial,Helvetica,sans-serif; }
+h1      { margin:0; padding:18px 0; text-align:center }
+
+/* —— small-thumb grid —— */
+:root   { --thumb-w: 640px; }     /* ← adjust thumbnail width here */
+.grid   { display:flex; flex-wrap:wrap; gap:16px;
+          justify-content:center; padding-bottom:40px }
+.cam    { position:relative; width:var(--thumb-w);
+          border:2px solid #444; background:#000; cursor:pointer }
+.cam img{ display:block; width:100%; height:auto }
+
+/* —— full-screen hint —— */
+.btnFS  { position:absolute; right:8px; bottom:8px; z-index:2;
+          width:28px; height:28px; line-height:28px;
+          background:#0009; color:#fff; font:20px/28px monospace;
+          text-align:center; border-radius:4px;
+          opacity:0; transition:opacity .25s; pointer-events:none }
+.cam:hover .btnFS,
+.cam:focus-within .btnFS { opacity:1 }
+
+/* —— stretch image when it IS in Fullscreen —— */
+:fullscreen img,
+:-webkit-full-screen img {
+    width:100vw; height:100vh; object-fit:contain; background:#000;
+}
 </style>
 </head>
 <body>
-  <h1>Kasa Live Feeds</h1>
-  <div class="grid">
-    {% for cam in cameras %}
-      <div class="cam">
+<h1>Kasa&nbsp;Live&nbsp;Feeds &nbsp;·&nbsp; click a feed for Full-screen</h1>
+
+<div class="grid">
+  {% for cam in cameras %}
+    <div class="cam" onclick="toggleFS(this.firstElementChild)">
         <img src="{{ url_for('video', cam=cam) }}" alt="{{ cam }}">
-      </div>
-    {% endfor %}
-  </div>
+        <div class="btnFS">↗</div>
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+function toggleFS(img){
+    if (document.fullscreenElement || document.webkitFullscreenElement){
+        document.exitFullscreen?.() || document.webkitCancelFullScreen?.();
+    } else {
+        (img.requestFullscreen?.() || img.webkitRequestFullScreen?.()).catch(()=>{});
+    }
+}
+</script>
 </body>
 </html>
