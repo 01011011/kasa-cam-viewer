@@ -1,7 +1,43 @@
-# Ignore .env files
+# Environment files (contain sensitive camera credentials)
 .env
 *.env
+.env.local
+.env.production
 
-# Ignore recordings folder
+# Recordings folder (contains video files)
 recordings/
+
+# Python
 venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+test_*.mjpeg
+test_*.mp4
+*_test.*
